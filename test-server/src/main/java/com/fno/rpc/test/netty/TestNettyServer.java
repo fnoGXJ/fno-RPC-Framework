@@ -1,12 +1,10 @@
 package com.fno.rpc.test.netty;
 
-import com.fno.rpc.RpcServer;
-import com.fno.rpc.api.HelloService;
-import com.fno.rpc.api.TestService;
-import com.fno.rpc.netty.server.NettyServer;
-import com.fno.rpc.test.HelloServiceImpl;
-import com.fno.rpc.test.TestServiceImpl;
+import com.fno.rpc.telecommunication.RpcServer;
+import com.fno.rpc.annotation.ServiceScan;
+import com.fno.rpc.telecommunication.netty.server.NettyServer;
 
+@ServiceScan
 public class TestNettyServer {
     public static void main(String[] args) {
         RpcServer server = new NettyServer(8885);

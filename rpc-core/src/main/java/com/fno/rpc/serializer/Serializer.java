@@ -10,12 +10,14 @@ public interface Serializer {
 
     static Serializer getSerializerByCode(int code) {
         switch (code) {
-            case 2:
-                return new JsonSerializer();
             case 1:
                 return new KryoSerializer();
+            case 2:
+                return new ProtobufSerializer();
+            case 3:
+                return new JsonSerializer();
             default:
-                return new KryoSerializer();
+                return new ProtobufSerializer();
         }
     }
 }

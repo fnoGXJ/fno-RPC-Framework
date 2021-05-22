@@ -3,35 +3,37 @@ package com.fno.rpc.handler;
 import com.fno.rpc.entity.RpcRequest;
 import com.fno.rpc.entity.RpcResponse;
 import com.fno.rpc.provider.ServiceProvider;
+import com.fno.rpc.serializer.Serializer;
+import com.fno.rpc.telecommunication.socket.utils.ObjectReader;
+import com.fno.rpc.telecommunication.socket.utils.ObjectWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.*;
 import java.net.Socket;
 
 public class ServiceHandleThread implements Runnable {
     private static final Logger logger = LoggerFactory.getLogger(ServiceHandleThread.class);
-    private final ServiceProvider serviceProvider;
     private final RequestHandler requestHandler;
     private final Socket socket;
+    private final Serializer serializer;
 
-    public ServiceHandleThread(ServiceProvider serviceRegistry, RequestHandler requestHandler, Socket socket) {
-        this.serviceProvider = serviceRegistry;
+    public ServiceHandleThread(RequestHandler requestHandler, Socket socket, Serializer serializer) {
         this.requestHandler = requestHandler;
         this.socket = socket;
+        this.serializer = serializer;
     }
 
     @Override
     public void run() {
-        try (ObjectInputStream inputStream = new ObjectInputStream(socket.getInputStream());
-             ObjectOutputStream outputStream = new ObjectOutputStream(socket.getOutputStream())) {
-            RpcRequest rpcRequest = (RpcRequest) inputStream.readObject();
-            Object result = requestHandler.handle(rpcRequest);
-            outputStream.writeObject(RpcResponse.success(result));
-            outputStream.flush();
-        } catch (IOException | ClassNotFoundException e) {
+        try {
+            InputStream inputStream = socket.getInputStream();
+            OutputStream outputStream = socket.getOutputStream();
+            RpcRequest rpcRequest = (RpcRequest) ObjectReader.readObject(inputStream);
+            Object obj = requestHandler.handle(rpcRequest);
+            RpcResponse<Object> rpcResponse = RpcResponse.success(obj, rpcRequest.getRequestId());
+            ObjectWriter.writeObject(outputStream, rpcResponse, serializer);
+        } catch (IOException e) {
             logger.error("调用时有错误发生:{}", e);
         }
     }

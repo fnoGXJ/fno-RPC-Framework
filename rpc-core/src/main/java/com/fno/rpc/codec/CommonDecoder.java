@@ -17,26 +17,27 @@ import java.util.List;
 public class CommonDecoder extends ReplayingDecoder {
     private static final int MAGIC_NUMBER = 0xCAFEBABE;
     private final Logger logger = LoggerFactory.getLogger(CommonEncoder.class);
+
     @Override
     protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
         int magicNumber = in.readInt();
-        if(magicNumber != MAGIC_NUMBER){
+        if (magicNumber != MAGIC_NUMBER) {
             logger.error("错误的包，接收到的包不是RPC协议包");
             throw new RpcException(RpcError.NOT_RPC_PACKAGE);
         }
         int packageCode = in.readInt();
         Class<?> packageType;
-        if(packageCode == PackageType.REQUEST.getCode()){
+        if (packageCode == PackageType.REQUEST.getCode()) {
             packageType = RpcRequest.class;
-        }else if(packageCode == PackageType.RESPONSE.getCode()){
+        } else if (packageCode == PackageType.RESPONSE.getCode()) {
             packageType = RpcResponse.class;
-        }else{
+        } else {
             logger.error("无法识别的类型编号");
             throw new RpcException(RpcError.WRONG_PACKAGE_TYPE);
         }
         int serializerCode = in.readInt();
         Serializer serializer = Serializer.getSerializerByCode(serializerCode);
-        if(serializer == null){
+        if (serializer == null) {
             logger.error("无法识别的序列化器");
             throw new RpcException(RpcError.NO_SUCH_SERIALIZER);
         }

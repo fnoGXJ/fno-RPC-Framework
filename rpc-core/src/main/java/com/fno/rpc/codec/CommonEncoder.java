@@ -15,7 +15,6 @@ import org.slf4j.LoggerFactory;
 
 public class CommonEncoder extends MessageToByteEncoder {
     private static final int MAGIC_NUMBER = 0xCAFEBABE;
-    private final Logger logger = LoggerFactory.getLogger(CommonEncoder.class);
     private final Serializer serializer;
 
     public CommonEncoder(Serializer serializer) {
@@ -27,7 +26,7 @@ public class CommonEncoder extends MessageToByteEncoder {
         out.writeInt(MAGIC_NUMBER);
         if (msg instanceof RpcRequest) {
             out.writeInt(PackageType.REQUEST.getCode());
-        } else{
+        } else {
             out.writeInt(PackageType.RESPONSE.getCode());
         }
         out.writeInt(serializer.getCode());

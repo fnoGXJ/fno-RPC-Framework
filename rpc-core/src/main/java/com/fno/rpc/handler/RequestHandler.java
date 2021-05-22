@@ -26,13 +26,10 @@ public class RequestHandler {
         Object service = serviceProvider.getService(rpcRequest.getInterfaceName());
         try {
             result = invoke(rpcRequest, service);
-            rpcResponse.setMessage(ResponseCode.SUCCESS.getMessage());
-            rpcResponse.setStatusCode(ResponseCode.SUCCESS.getCode());
-            rpcResponse.setData(result);
         } catch (InvocationTargetException | IllegalAccessException e) {
             logger.error("调用时有错误发生:{}", e);
         }
-        return rpcResponse;
+        return result;
     }
 
     private Object invoke(RpcRequest rpcRequest, Object service) throws InvocationTargetException, IllegalAccessException {
@@ -40,7 +37,7 @@ public class RequestHandler {
         try {
             method = service.getClass().getMethod(rpcRequest.getMethodName(), rpcRequest.getParamTypes());
         } catch (NoSuchMethodException e) {
-            return RpcResponse.fail(ResponseCode.NO_SUCH_METHOD);
+            return RpcResponse.fail(ResponseCode.NO_SUCH_METHOD, rpcRequest.getRequestId());
         }
         return method.invoke(service, rpcRequest.getParameters());
     }

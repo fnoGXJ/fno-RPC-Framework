@@ -3,13 +3,6 @@ package com.fno.rpc.exception;
 import com.fno.rpc.enumeration.RpcError;
 
 public class RpcException extends RuntimeException {
-    public RpcException() {
-        super();
-    }
-
-    public RpcException(String message) {
-        super(message);
-    }
 
     public RpcException(String message, Throwable cause) {
         super(message, cause);
@@ -23,4 +16,7 @@ public class RpcException extends RuntimeException {
         super(error.getMsg());
     }
 
+    public RpcException(RpcError error, String message) {
+        super(error.getMsg(), new Throwable(message));
+    }
 }
