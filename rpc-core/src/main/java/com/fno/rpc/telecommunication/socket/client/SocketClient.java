@@ -38,7 +38,7 @@ public class SocketClient implements RpcClient {
     public SocketClient(SerializerCode code, LoadBalance loadBalance) {
         if (loadBalance == null) loadBalance = new RandomLoadBalance();
         this.serializer = Serializer.getSerializerByCode(code.getCode());
-        this.serviceRegistry = new NacosServiceRegistry(loadBalance);
+        this.serviceRegistry = new NacosServiceRegistry(this);
     }
 
     @Override

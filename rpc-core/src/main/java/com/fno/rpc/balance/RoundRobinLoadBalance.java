@@ -1,24 +1,36 @@
 package com.fno.rpc.balance;
 
 import com.alibaba.nacos.api.naming.pojo.Instance;
+import com.fno.rpc.telecommunication.RpcClient;
+import com.google.common.util.concurrent.AtomicDouble;
 
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class RoundRobinLoadBalance implements LoadBalance {
-    private volatile int index;
+public class RoundRobinLoadBalance extends AbstractLoadBalance {
+    private static final ConcurrentMap<Instance, AtomicDouble> map = new ConcurrentHashMap<>();
 
     @Override
-    public Instance select(List<Instance> allInstances) {
-        Instance instance = allInstances.get(index);
-        int size = allInstances.size();
-        if(index >= size-1){
-            synchronized (this){
-                if(index >= size){
-                    index = index % size;
-                }
+    protected Instance doSelect(List<Instance> allInstances, RpcClient rpcClient) {
+        Instance bestInstance = null;
+        double totalWeight = 0;
+        for (Instance instance : allInstances) {
+            AtomicDouble aDouble = map.get(instance);
+            if (aDouble == null) {
+                aDouble = new AtomicDouble(0.0);
+                map.putIfAbsent(instance, aDouble);
+            }
+            double weight = instance.getWeight();
+            aDouble.addAndGet(weight);
+            totalWeight += weight;
+            if (bestInstance == null || map.get(bestInstance).get() < aDouble.get()) {
+                bestInstance = instance;
             }
         }
-        return instance;
+        AtomicDouble aDouble = map.get(bestInstance);
+        aDouble.set(totalWeight - aDouble.get());
+        return bestInstance;
     }
 }

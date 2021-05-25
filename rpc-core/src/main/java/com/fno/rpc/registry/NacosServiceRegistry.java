@@ -4,10 +4,10 @@ import com.alibaba.nacos.api.exception.NacosException;
 import com.alibaba.nacos.api.naming.NamingFactory;
 import com.alibaba.nacos.api.naming.NamingService;
 import com.alibaba.nacos.api.naming.pojo.Instance;
-import com.fno.rpc.balance.LoadBalance;
-import com.fno.rpc.balance.RandomLoadBalance;
 import com.fno.rpc.enumeration.RpcError;
 import com.fno.rpc.exception.RpcException;
+import com.fno.rpc.telecommunication.RpcClient;
+import com.fno.rpc.balance.util.LoadBalanceUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,7 +18,7 @@ public class NacosServiceRegistry implements ServiceRegistry {
     private static final Logger logger = LoggerFactory.getLogger(NacosServiceRegistry.class);
     private static final String REGISTRY_ADDR = "1.117.97.181:8848";
     private static final NamingService namingService;
-    private final LoadBalance loadBalance;
+    private final RpcClient rpcClient;
 
     static {
         try {
@@ -30,10 +30,11 @@ public class NacosServiceRegistry implements ServiceRegistry {
     }
 
     public NacosServiceRegistry() {
-        this(new RandomLoadBalance());
+        this(null);
     }
-    public NacosServiceRegistry(LoadBalance loadBalance) {
-        this.loadBalance = loadBalance;
+
+    public NacosServiceRegistry(RpcClient client) {
+        this.rpcClient = client;
     }
 
     @Override
@@ -50,10 +51,10 @@ public class NacosServiceRegistry implements ServiceRegistry {
     public InetSocketAddress findServiceAddress(String serviceName) {
         try {
             List<Instance> allInstances = namingService.getAllInstances(serviceName);
-            if(allInstances.size() == 0){
-                throw new RpcException(RpcError.FAIL_GET_SERVICE,"serviceName:"+serviceName+"未找到对应的服务器");
+            if (allInstances.size() == 0) {
+                throw new RpcException(RpcError.FAIL_GET_SERVICE, "serviceName:" + serviceName + "未找到对应的服务器");
             }
-            Instance instance = loadBalance.select(allInstances);
+            Instance instance = LoadBalanceUtils.getInstance(allInstances, rpcClient);
             return new InetSocketAddress(instance.getIp(), instance.getPort());
         } catch (NacosException e) {
             logger.error("获取服务器实例错误...", e);

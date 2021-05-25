@@ -52,11 +52,7 @@ public class NettyClient implements RpcClient {
     }
 
     public NettyClient(SerializerCode serializerCode) {
-        this(serializerCode, new RandomLoadBalance());
-    }
-
-    public NettyClient(SerializerCode serializerCode, LoadBalance loadBalance) {
-        this.serviceRegistry = new NacosServiceRegistry(loadBalance);
+        this.serviceRegistry = new NacosServiceRegistry(this);
         this.serializer = Serializer.getSerializerByCode(serializerCode.getCode());
     }
 
