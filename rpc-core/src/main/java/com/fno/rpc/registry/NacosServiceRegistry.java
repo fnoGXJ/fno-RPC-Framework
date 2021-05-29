@@ -4,10 +4,10 @@ import com.alibaba.nacos.api.exception.NacosException;
 import com.alibaba.nacos.api.naming.NamingFactory;
 import com.alibaba.nacos.api.naming.NamingService;
 import com.alibaba.nacos.api.naming.pojo.Instance;
+import com.fno.rpc.balance.LoadBalance;
 import com.fno.rpc.enumeration.RpcError;
 import com.fno.rpc.exception.RpcException;
 import com.fno.rpc.telecommunication.RpcClient;
-import com.fno.rpc.balance.util.LoadBalanceUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,13 +48,13 @@ public class NacosServiceRegistry implements ServiceRegistry {
     }
 
     @Override
-    public InetSocketAddress findServiceAddress(String serviceName) {
+    public InetSocketAddress findServiceAddress(String serviceName, LoadBalance loadBalance) {
         try {
             List<Instance> allInstances = namingService.getAllInstances(serviceName);
             if (allInstances.size() == 0) {
                 throw new RpcException(RpcError.FAIL_GET_SERVICE, "serviceName:" + serviceName + "未找到对应的服务器");
             }
-            Instance instance = LoadBalanceUtils.getInstance(allInstances, rpcClient);
+            Instance instance = loadBalance.select(allInstances, rpcClient);
             return new InetSocketAddress(instance.getIp(), instance.getPort());
         } catch (NacosException e) {
             logger.error("获取服务器实例错误...", e);

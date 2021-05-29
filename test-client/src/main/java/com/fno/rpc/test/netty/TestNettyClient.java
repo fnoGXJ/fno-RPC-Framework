@@ -1,12 +1,14 @@
 package com.fno.rpc.test.netty;
 
 import com.fno.rpc.annotation.ClientLoadBalance;
+import com.fno.rpc.annotation.ReferenceConfig;
 import com.fno.rpc.telecommunication.RpcClient;
 import com.fno.rpc.telecommunication.RpcClientProxy;
 import com.fno.rpc.api.HelloObject;
 import com.fno.rpc.api.HelloService;
 import com.fno.rpc.telecommunication.netty.client.NettyClient;
-@ClientLoadBalance(name = "consistentHash")
+
+@ReferenceConfig(loadBalance = "roundRobin", serializer = "JSON")
 public class TestNettyClient {
     public static void main(String[] args) {
         RpcClient client = new NettyClient();

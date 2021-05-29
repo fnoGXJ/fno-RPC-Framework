@@ -10,4 +10,6 @@ public enum SerializerCode {
     PROTOBUF(2),
     JSON(3);
     private final int code;
+
+
 }

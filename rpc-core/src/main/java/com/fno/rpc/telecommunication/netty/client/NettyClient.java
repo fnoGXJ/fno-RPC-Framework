@@ -1,5 +1,7 @@
 package com.fno.rpc.telecommunication.netty.client;
 
+import com.fno.config.ClientConfiguration;
+import com.fno.rpc.telecommunication.AbstractRpcClient;
 import com.fno.rpc.telecommunication.RpcClient;
 import com.fno.rpc.balance.LoadBalance;
 import com.fno.rpc.balance.RandomLoadBalance;
@@ -19,16 +21,15 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.util.AttributeKey;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.InetSocketAddress;
 
-public class NettyClient implements RpcClient {
-    private static final Logger logger = LoggerFactory.getLogger(NettyClient.class);
-    private static Serializer serializer;
+@Slf4j
+public class NettyClient extends AbstractRpcClient {
     private static final Bootstrap bootstrap;
-    private final ServiceRegistry serviceRegistry;
 
     static {
         EventLoopGroup group = new NioEventLoopGroup();
@@ -39,37 +40,31 @@ public class NettyClient implements RpcClient {
                 .handler(new ChannelInitializer<SocketChannel>() {
                     protected void initChannel(SocketChannel ch) throws Exception {
                         ChannelPipeline pipeline = ch.pipeline();
-                        pipeline.addLast(new CommonEncoder(serializer));
+                        pipeline.addLast(new CommonEncoder(configuration.getSerializer()));
                         pipeline.addLast(new CommonDecoder());
                         pipeline.addLast(new NettyClientHandler());
                     }
                 });
-
     }
 
     public NettyClient() {
-        this(SerializerCode.KRYO);
+        load();
+        configuration.getLoadBalance();
     }
-
-    public NettyClient(SerializerCode serializerCode) {
-        this.serviceRegistry = new NacosServiceRegistry(this);
-        this.serializer = Serializer.getSerializerByCode(serializerCode.getCode());
-    }
-
 
     @Override
     public Object sendRequest(RpcRequest rpcRequest) {
-        InetSocketAddress serviceAddress = serviceRegistry.findServiceAddress(rpcRequest.getInterfaceName());
+        InetSocketAddress serviceAddress = serviceRegistry.findServiceAddress(rpcRequest.getInterfaceName(), configuration.getLoadBalance());
         try {
             final ChannelFuture future = bootstrap.connect(serviceAddress).sync();
-            logger.info("已连接到服务器 host:{}, port:{}", serviceAddress.getHostName(), serviceAddress.getPort());
+            log.info("已连接到服务器 host:{}, port:{}", serviceAddress.getHostName(), serviceAddress.getPort());
             Channel channel = future.channel();
             if (channel != null) {
                 channel.writeAndFlush(rpcRequest).addListener(writeFuture -> {
                     if (writeFuture.isSuccess()) {
-                        logger.info("客户端发送消息：{}", rpcRequest.toString());
+                        log.info("客户端发送消息：{}", rpcRequest.toString());
                     } else {
-                        logger.error("服务端接收消息失败...", future.cause());
+                        log.error("服务端接收消息失败...", future.cause());
                     }
                 });
                 channel.closeFuture().sync();
@@ -80,7 +75,7 @@ public class NettyClient implements RpcClient {
             }
 
         } catch (InterruptedException e) {
-            logger.error("服务器连接客户端时有错误...", e);
+            log.error("服务器连接客户端时有错误...", e);
         }
         return null;
     }
