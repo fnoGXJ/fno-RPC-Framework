@@ -37,7 +37,7 @@ public class NettyServer extends AbstractRpcServer {
 
     public void start() {
         ShutdownHook.getShutdownHook().addClearAllHook();
-        EventLoopGroup bossGroup = new NioEventLoopGroup();
+        EventLoopGroup bossGroup = new NioEventLoopGroup(1);
         EventLoopGroup workerGroup = new NioEventLoopGroup();
         DefaultEventExecutorGroup serviceHandlerGroup = new DefaultEventExecutorGroup(RuntimeUtils.getCPUs() * 2,
                 ThreadPoolUtils.createThreadFactory("service-handler-group", false));
@@ -46,13 +46,13 @@ public class NettyServer extends AbstractRpcServer {
             serverBootstrap.group(bossGroup, workerGroup)
                     .channel(NioServerSocketChannel.class)
                     .option(ChannelOption.SO_BACKLOG, 256)
-                    .option(ChannelOption.SO_KEEPALIVE, true)
+                    .childOption(ChannelOption.SO_KEEPALIVE, true)
                     .childOption(ChannelOption.TCP_NODELAY, true)
                     .handler(new LoggingHandler(LogLevel.INFO))
                     .childHandler(new ChannelInitializer<SocketChannel>() {
                         protected void initChannel(SocketChannel ch) throws Exception {
                             ChannelPipeline pipeline = ch.pipeline();
-                            pipeline.addLast(new IdleStateHandler(30, 0, 0, TimeUnit.SECONDS));
+                            pipeline.addLast(new IdleStateHandler(0, 60, 0, TimeUnit.SECONDS));
                             pipeline.addLast(new CommonEncoder(serializer));
                             pipeline.addLast(new CommonDecoder());
                             pipeline.addLast(serviceHandlerGroup, new NettyServerHandler());

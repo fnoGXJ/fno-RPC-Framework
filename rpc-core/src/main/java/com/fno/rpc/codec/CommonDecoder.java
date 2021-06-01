@@ -1,5 +1,6 @@
 package com.fno.rpc.codec;
 
+import com.fno.rpc.entity.HeartbeatMsg;
 import com.fno.rpc.entity.RpcRequest;
 import com.fno.rpc.entity.RpcResponse;
 import com.fno.rpc.enumeration.PackageType;
@@ -31,6 +32,8 @@ public class CommonDecoder extends ReplayingDecoder {
             packageType = RpcRequest.class;
         } else if (packageCode == PackageType.RESPONSE.getCode()) {
             packageType = RpcResponse.class;
+        } else if (packageCode == PackageType.HEARTBEAT.getCode()) {
+            packageType = HeartbeatMsg.class;
         } else {
             logger.error("无法识别的类型编号");
             throw new RpcException(RpcError.WRONG_PACKAGE_TYPE);

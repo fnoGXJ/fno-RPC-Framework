@@ -7,6 +7,7 @@ import lombok.Getter;
 @Getter
 public enum PackageType {
     REQUEST(1),
-    RESPONSE(2);
+    RESPONSE(2),
+    HEARTBEAT(3);
     private int code;
 }

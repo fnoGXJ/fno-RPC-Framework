@@ -26,8 +26,10 @@ public class CommonEncoder extends MessageToByteEncoder {
         out.writeInt(MAGIC_NUMBER);
         if (msg instanceof RpcRequest) {
             out.writeInt(PackageType.REQUEST.getCode());
-        } else {
+        } else if (msg instanceof RpcResponse) {
             out.writeInt(PackageType.RESPONSE.getCode());
+        } else {
+            out.writeInt(PackageType.HEARTBEAT.getCode());
         }
         out.writeInt(serializer.getCode());
         byte[] bytes = serializer.serialize(msg);
