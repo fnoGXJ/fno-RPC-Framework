@@ -1,6 +1,5 @@
 package com.fno.rpc.test.netty;
 
-import com.fno.rpc.annotation.ClientLoadBalance;
 import com.fno.rpc.annotation.ReferenceConfig;
 import com.fno.rpc.telecommunication.RpcClient;
 import com.fno.rpc.telecommunication.RpcClientProxy;
@@ -14,7 +13,7 @@ public class TestNettyClient {
         RpcClient client = new NettyClient();
         RpcClientProxy rpcClientProxy = new RpcClientProxy(client);
         HelloService proxy = rpcClientProxy.getProxy(HelloService.class);
-        String s = proxy.hello(new HelloObject(11, "我可以做你的爸爸吗"));
+        String s = proxy.hello(new HelloObject(1, "test example01"));
         System.out.println(s);
     }
 }
